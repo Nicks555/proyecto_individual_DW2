@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Star Chemical – Tienda Bom Bril</title>
+ 
+  <!-- RÚBRICA: jQuery 3.7.1 en el <head>, ANTES del CSS -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+ 
+  <!-- Tipografías: Montserrat (títulos) y Open Sans (texto) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+/* ==========================================================
+   Star Chemical – Tienda Bom Bril
+   Colores de marca como CSS Custom Properties
+   ========================================================== */
+:root {
+  --bg: #f4f7f6;
+  --panel: #ffffff;
+  --navy: #0b1a3d;
+  --green: #00a86b;
+  --green-dark: #008a58;
+  --orange: #ff6b00;
+  /* --- Tokens del TEMA (modo claro por defecto) --- */
+  --text: #0b1a3d;
+  --muted: #667089;
+  --line: #e2e9e6;
+  --input-border: #cdd7d3;
+  --active-bg: #effaf5;
+  --summary-bg: #fbfdfc;
+  --danger-bg: #fdeaea;
+  --green-text: #008a58;
+  --btn-add: #0b1a3d;
+  --btn-add-hover: #17306e;
+  --danger: #c62828;
+  --nav-h: 64px;
+  --shadow: 0 2px 14px rgba(11, 26, 61, .08);
+}
+ 
+/* ---------- MODO OSCURO: jQuery agrega .dark-mode al body ----------
+   Solo cambian los tokens del tema; los acentos de marca se mantienen. */
+body.dark-mode {
+  color-scheme: dark;   /* calendario y scrollbars oscuros */
+  --bg: #12141c;
+  --panel: #1e212b;
+  --text: #f4f7f6;
+  --line: #2a2e42;
+  --muted: #9aa3b8;
+  --input-border: #3a3f58;
+  --active-bg: rgba(0, 168, 107, .16);
+  --summary-bg: #191c25;
+  --danger-bg: rgba(198, 40, 40, .22);
+  --green-text: #2fd39a;
+  --btn-add: #1f3a82;
+  --btn-add-hover: #2a4aa0;
+  --shadow: 0 2px 14px rgba(0, 0, 0, .45);
+}
+body.dark-mode .chip.active { background: var(--green); color: #fff; }
+body.dark-mode .toast { background: #2a2e42; }
+body.dark-mode .navbar { border-bottom: 1px solid var(--line); }
+ 
+/* Transiciones suaves de color al cambiar de tema (0.3s ease) */
+body, .panel, .card, .menu, .modal, .chip, .size-btn, .tab, .cart__summary,
+.modal input, .toast, .ci__qty button, .modal__close, .navbar, .btn--add {
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+}
+ 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;            /* PC: sin scroll global */
+}
+h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+button { font: inherit; cursor: pointer; border: 0; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+ 
+/* ---------- NAVBAR ---------- */
+.navbar {
+  flex: none;
+  height: var(--nav-h);
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: relative;
+  z-index: 50;
+}
+.navbar__left { display: flex; align-items: center; gap: 14px; }
+.navbar__right { display: flex; align-items: center; gap: 6px; }
+.icon-btn { background: transparent; color: #fff; font-size: 1.6rem; width: 42px; height: 42px; border-radius: 10px; }
+.icon-btn:hover { background: rgba(255,255,255,.12); }
+.brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; }
+.brand__name { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.15rem; }
+.brand__name small { font-weight: 600; color: var(--green); font-size: .85em; }
+.cart-btn { position: relative; background: transparent; color: #fff; font-size: 1.6rem; width: 46px; height: 46px; border-radius: 12px; }
+.cart-btn:hover { background: rgba(255,255,255,.12); }
+.badge {
+  position: absolute; top: 0; right: -2px;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  background: var(--orange); color: var(--navy);
+  font: 800 .75rem/22px 'Montserrat', sans-serif;
+  border-radius: 11px; text-align: center;
+}
+.badge.bump { animation: bump .35s; }
+@keyframes bump { 50% { transform: scale(1.35); } }
+ 
+.menu {
+  display: none;
+  position: absolute; top: calc(var(--nav-h) - 6px); left: 20px;
+  width: 220px; padding: 8px;
+  background: var(--panel); border-radius: 12px; box-shadow: 0 10px 30px rgba(11,26,61,.25);
+}
+.menu a { display: block; padding: 11px 14px; border-radius: 8px; color: var(--text); text-decoration: none; font-weight: 600; }
+.menu a:hover { background: var(--bg); color: var(--green-text); }
+ 
+/* ---------- DASHBOARD ---------- */
+.dashboard {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 20px; padding: 20px;
+}
+.panel {
+  background: var(--panel);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+ 
+/* ---------- CATÁLOGO ---------- */
+.catalog__head { padding: 20px 24px 16px; border-bottom: 1px solid var(--line); }
+.catalog__head h1 { font-size: 1.3rem; color: var(--text); margin-bottom: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 16px; border-radius: 999px;
+  background: var(--bg); color: var(--text); font-weight: 600; font-size: .88rem;
+  border: 1.5px solid transparent; transition: background .2s, color .2s;
+}
+.chip:hover { border-color: var(--text); }
+.chip.active { background: var(--navy); color: #fff; }
+.catalog__body { flex: 1; overflow-y: auto; padding: 20px 24px 24px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 40px 0; }
+ 
+.card { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.card__media { position: relative; background: #fff; border-bottom: 1px solid var(--line); aspect-ratio: 1 / .8; }
+.card__media img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tag-offer { position: absolute; top: 10px; left: 10px; background: var(--orange); color: var(--navy); font: 800 .72rem 'Montserrat', sans-serif; padding: 4px 10px; border-radius: 6px; }
+.card__body { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card__name { font-size: .98rem; color: var(--text); line-height: 1.25; }
+.sizes { display: flex; flex-wrap: wrap; gap: 6px; }
+.size-btn { padding: 5px 12px; border-radius: 8px; background: var(--panel); border: 1.5px solid var(--line); font-size: .82rem; font-weight: 600; color: var(--muted); }
+.size-btn.active { border-color: var(--green); color: var(--green-text); background: var(--active-bg); }
+.card__price { margin-top: auto; display: flex; align-items: baseline; gap: 8px; }
+.price { font: 800 1.2rem 'Montserrat', sans-serif; color: var(--text); }
+.price-old { color: var(--muted); font-size: .85rem; }
+.btn { border-radius: 10px; padding: 11px 16px; font-weight: 700; transition: background .2s, transform .1s; }
+.btn:active { transform: translateY(1px); }
+.btn--add { background: var(--btn-add); color: #fff; }
+.btn--add:hover { background: var(--btn-add-hover); }
+.btn--add.done { background: var(--green-dark); }
+.btn--pay { width: 100%; background: var(--green); color: #fff; font-size: 1.05rem; padding: 15px; box-shadow: 0 4px 12px rgba(0,168,107,.3); }
+.btn--pay:hover:not(:disabled) { background: var(--green-dark); }
+.btn--ghost { width: 100%; margin-top: 10px; background: transparent; color: var(--muted); border: 1.5px solid var(--line); }
+.btn--ghost:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.btn--ghost:disabled { opacity: .5; cursor: not-allowed; }
+.btn--pay:disabled { background: #b8c4c0; box-shadow: none; cursor: not-allowed; }
+ 
+/* ---------- PESTAÑAS (Carrito / Bitácora) ---------- */
+.tabs { flex: none; display: flex; border-bottom: 1px solid var(--line); }
+.tab { flex: 1; padding: 16px 8px; background: transparent; color: var(--muted); font: 700 .88rem 'Montserrat', sans-serif; border-bottom: 3px solid transparent; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--green); }
+.tab-pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
+.tab-pane.active { display: flex; }
+ 
+/* ---------- BITÁCORA ---------- */
+.log-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.log__top { display: flex; justify-content: space-between; align-items: baseline; }
+.log__id { font: 800 .95rem 'Montserrat', sans-serif; color: var(--text); }
+.log__date { font-size: .78rem; color: var(--muted); }
+.log__items { font-size: .88rem; }
+.log__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 10px; margin-top: 4px; }
+.log__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.log__ask { font-size: .82rem; color: var(--text); font-weight: 600; }
+.btn-cancel-res, .btn-cancel-yes, .btn-cancel-no { padding: 6px 12px; border-radius: 8px; font-size: .8rem; font-weight: 700; background: transparent; border: 1.5px solid var(--line); color: var(--muted); }
+.btn-cancel-res:hover, .btn-cancel-yes { border-color: var(--danger); color: var(--danger); }
+.btn-cancel-yes:hover { background: var(--danger-bg); }
+.btn-cancel-no:hover { border-color: var(--text); color: var(--text); }
+.log-item.cancelled .log__items, .log-item.cancelled .log__total { text-decoration: line-through; opacity: .6; }
+.log-item.cancelled .log__state { color: var(--danger); }
+.log__branch { font-size: .82rem; color: var(--muted); }
+.log__total { font: 800 1rem 'Montserrat', sans-serif; color: var(--green); }
+.log__state { font-size: .8rem; font-weight: 600; color: var(--green-text); }
+ 
+/* ---------- CARRITO ---------- */
+.cart__title { padding: 20px 22px 14px; font-size: 1.2rem; color: var(--text); border-bottom: 1px solid var(--line); }
+.cart__list { flex: 1; overflow-y: auto; list-style: none; padding: 8px 22px; }
+.cart__empty { color: var(--muted); text-align: center; padding: 50px 0; }
+.cart-item { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.ci__name { font-weight: 600; color: var(--text); font-size: .93rem; }
+.ci__size { font-size: .8rem; color: var(--muted); }
+.ci__qty { display: flex; align-items: center; gap: 4px; }
+.ci__qty button { width: 28px; height: 28px; border-radius: 8px; background: var(--bg); color: var(--text); font-weight: 800; }
+.ci__qty button:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.ci__qty button:disabled { opacity: .4; cursor: not-allowed; }
+.ci__qty .qty { min-width: 30px; text-align: center; font-weight: 700; }
+.ci__side { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.ci__sub { font-family: 'Montserrat', sans-serif; color: var(--text); }
+.ci__del { background: transparent; font-size: .85rem; padding: 4px; border-radius: 6px; }
+.ci__del:hover { background: var(--danger-bg); }
+ 
+.cart__summary { flex: none; padding: 16px 22px 22px; border-top: 1px solid var(--line); background: var(--summary-bg); }
+.row { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--muted); }
+.row--total { color: var(--text); font: 800 1.1rem 'Montserrat', sans-serif; margin: 12px 0 16px; }
+.row--total span:last-child { color: var(--green); font-size: 1.45rem; }
+.cart.pulse { animation: pulse .8s; }
+@keyframes pulse { 40% { box-shadow: 0 0 0 4px var(--orange); } }
+ 
+/* ---------- MODAL ---------- */
+/* fadeIn aplica display:block, por eso el centrado usa margin:auto y no flex */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; overflow-y: auto; padding: 20px; background: rgba(11,26,61,.6); }
+.modal { position: relative; max-width: 460px; margin: 6vh auto; background: var(--panel); border-radius: 16px; padding: 28px; }
+.modal h2 { color: var(--text); font-size: 1.3rem; }
+.modal__close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); color: var(--text); }
+.modal__total { margin: 6px 0 18px; color: var(--muted); }
+.modal__total strong { color: var(--green); font-family: 'Montserrat', sans-serif; font-size: 1.1rem; }
+.modal label:not(.radio), .modal legend { display: block; font-weight: 600; font-size: .88rem; margin-top: 14px; color: var(--text); }
+.modal input[type=text], .modal input[type=date], .modal select { width: 100%; margin-top: 6px; padding: 12px 14px; border: 1.5px solid var(--input-border); background: var(--bg); color: var(--text); border-radius: 10px; font: inherit; }
+.modal input[type=text]:focus, .modal input[type=date]:focus, .modal select:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 3px rgba(0,168,107,.2); }
+.modal input.invalid, .modal select.invalid { border-color: var(--danger); }
+.error-msg { display: block; min-height: 18px; margin-top: 4px; font-size: .8rem; color: var(--danger); }
+.modal fieldset { border: 0; margin-bottom: 18px; }
+.radio { display: inline-flex; align-items: center; gap: 6px; margin: 8px 16px 0 0; cursor: pointer; }
+.radio input { accent-color: var(--green); }
+ 
+/* ---------- TOAST ---------- */
+.toast {
+  display: none; position: fixed; top: 76px; right: 20px; z-index: 200;
+  max-width: 360px; padding: 14px 20px; border-radius: 12px;
+  background: var(--navy); color: #fff; font-weight: 600;
+  border-left: 5px solid var(--green); box-shadow: 0 10px 30px rgba(11,26,61,.3);
+}
+.toast.error { border-left-color: var(--orange); }
+ 
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1280px) and (min-width: 1025px) {
+  .dashboard { grid-template-columns: minmax(0, 1fr) 330px; }
+}
+@media (max-width: 1024px) {
+  body { height: auto; min-height: 100vh; overflow: auto; display: block; }
+  .navbar { position: sticky; top: 0; }
+  .dashboard { display: block; padding: 14px; }
+  .panel { overflow: visible; margin-bottom: 16px; }
+  .catalog__body { overflow: visible; }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .cart__list { max-height: 360px; }
+}
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+  .brand__name { font-size: 1rem; }
+  .modal { margin: 3vh auto; padding: 22px 18px; }
+  .toast { left: 12px; right: 12px; max-width: none; top: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+ 
+  </style>
+</head>
+<body>
+ 
+  <!-- ============ 1. NAVBAR ============ -->
+  <header class="navbar">
+    <div class="navbar__left">
+      <button id="btnMenu" class="icon-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuDropdown">☰</button>
+      <a class="brand" href="#" data-action="inicio">
+        <!-- Ícono de burbujas -->
+        <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="11" cy="20" r="8" fill="none" stroke="#00a86b" stroke-width="2.5"/>
+          <circle cx="23" cy="11" r="5.5" fill="none" stroke="#ff6b00" stroke-width="2.5"/>
+          <circle cx="24" cy="25" r="3" fill="#fff"/>
+        </svg>
+        <span class="brand__name">Star Chemical <small>(Bom Bril)</small></span>
+      </a>
+    </div>
+    <div class="navbar__right">
+      <!-- Toggle de tema: jQuery hace .toggleClass('dark-mode') en el body y cambia el ícono con .html() -->
+      <button id="btnTheme" class="icon-btn" aria-label="Cambiar a modo oscuro" aria-pressed="false">🌙</button>
+      <button id="btnCart" class="cart-btn" aria-label="Ir al carrito">🛒<span id="cartBadge" class="badge">0</span></button>
+    </div>
+ 
+    <!-- Menú hamburguesa desplegable -->
+    <nav id="menuDropdown" class="menu" aria-label="Menú principal">
+      <a href="#" data-action="inicio">Inicio</a>
+      <a href="#" data-action="catalogo">Catálogo</a>
+      <a href="#" data-action="ofertas">Ofertas</a>
+      <a href="#" data-action="contacto">Contacto</a>
+    </nav>
+  </header>
+ 
+  <!-- ============ DASHBOARD (2 columnas en PC) ============ -->
+  <main class="dashboard">
+ 
+    <!-- 2. CATÁLOGO (izquierda) -->
+    <section class="panel catalog" id="catalogPanel">
+      <div class="catalog__head">
+        <h1>Catálogo de Productos - Bom Bril</h1>
+        <div id="filters" class="chips" role="group" aria-label="Filtrar por categoría">
+          <button class="chip active" data-cat="Todos">Todos</button>
+          <button class="chip" data-cat="Ceras">Ceras</button>
+          <button class="chip" data-cat="Lavandinas">Lavandinas</button>
+          <button class="chip" data-cat="Virulim">Virulim</button>
+          <button class="chip" data-cat="Destapacaños">Destapacaños</button>
+          <button class="chip" data-cat="Líquidos">Líquidos</button>
+        </div>
+      </div>
+      <div class="catalog__body" id="catalogBody">
+        <div id="productGrid" class="grid"></div>
+      </div>
+    </section>
+ 
+    <!-- 3. PANEL LATERAL (derecha): pestañas Carrito / Bitácora -->
+    <aside class="panel cart" id="cartPanel" aria-label="Panel lateral">
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="tabCart">🛒 Mi Carrito</button>
+        <button class="tab" role="tab" data-tab="tabLog">📋 Bitácora de Reservas</button>
+      </div>
+ 
+      <!-- PESTAÑA 1: carrito -->
+      <section id="tabCart" class="tab-pane active" role="tabpanel">
+      <ul id="cartList" class="cart__list"></ul>
+      <div class="cart__summary">
+        <div class="row"><span>Subtotal</span><span id="subtotal">BOB 0.00</span></div>
+        <div class="row"><span>Recargo por reserva</span><span id="recargo">BOB 0.00</span></div>
+        <div class="row row--total"><span>TOTAL</span><span id="total">BOB 0.00</span></div>
+        <button id="btnCheckout" class="btn btn--pay" disabled>Proceder a Reservar</button>
+        <button id="btnClear" class="btn btn--ghost" disabled>🗑️ Vaciar carrito</button>
+      </div>
+      </section>
+ 
+      <!-- PESTAÑA 2: bitácora de reservas -->
+      <section id="tabLog" class="tab-pane" role="tabpanel">
+        <ul id="logList" class="cart__list"></ul>
+      </section>
+    </aside>
+  </main>
+ 
+  <!-- ============ 4. MODAL DE PAGO ============ -->
+  <div id="checkoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <button type="button" id="btnCloseModal" class="modal__close" aria-label="Cerrar">✕</button>
+      <h2 id="modalTitle">Confirmar reserva</h2>
+      <p class="modal__total">Total a pagar: <strong id="modalTotal">BOB 0.00</strong></p>
+ 
+      <form id="checkoutForm" novalidate>
+        <label for="fName">Nombre de la persona</label>
+        <input id="fName" type="text" autocomplete="name" placeholder="Ej. María Quispe">
+        <span class="error-msg" aria-live="polite"></span>
+ 
+        <label for="fPhone">Celular de contacto</label>
+        <input id="fPhone" type="text" inputmode="numeric" autocomplete="tel" placeholder="Ej. 71234567">
+        <span class="error-msg" aria-live="polite"></span>
+ 
+        <label for="fBranch">Sucursal</label>
+        <select id="fBranch">
+          <option value="">Selecciona una sucursal</option>
+          <option value="Sucursal Centro">Sucursal Centro (Av. Mariscal Santa Cruz)</option>
+          <option value="Sucursal Miraflores">Sucursal Miraflores (Av. Saavedra)</option>
+          <option value="Sucursal Sopocachi">Sucursal Sopocachi (Av. 20 de Octubre)</option>
+          <option value="Sucursal El Alto">Sucursal El Alto (Av. 6 de Marzo)</option>
+          <option value="Sucursal Zona Sur">Sucursal Zona Sur (Av. Ballivián, Calacoto)</option>
+        </select>
+        <span class="error-msg" aria-live="polite"></span>
+ 
+        <label for="fDate">Fecha de recojo</label>
+        <input id="fDate" type="date">
+        <span class="error-msg" aria-live="polite"></span>
+ 
+        <fieldset>
+          <legend>Método de pago</legend>
+          <label class="radio"><input type="radio" name="pago" value="Efectivo" checked> Efectivo</label>
+          <label class="radio"><input type="radio" name="pago" value="QR"> QR</label>
+          <label class="radio"><input type="radio" name="pago" value="Transferencia"> Transferencia</label>
+        </fieldset>
+ 
+        <button type="submit" class="btn btn--pay">Confirmar Reserva</button>
+      </form>
+    </div>
+  </div>
+ 
+  <!-- Toast (notificación flotante, esquina superior derecha) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+ 
+  <!-- RÚBRICA: script.js al final del body -->
+  <script>
+/* ==========================================================
+   Star Chemical – Tienda Bom Bril | script.js
+   PATRÓN jQuery: todo dentro de $(document).ready(...)
+   ========================================================== */
+$(document).ready(function () {
+  'use strict';
+ 
+  var RECARGO = 5; // Recargo fijo por reserva (BOB)
+ 
+  /* ---------- DATOS ----------
+     Cada producto tiene variantes (presentación + precio).
+     "antes" = precio anterior (marca el producto como oferta). */
+  var productos = [
+    { id: 1,  nombre: 'Supercera Machimbre',        cat: 'Ceras',        tag: 'MACHIMBRE',  v: [{ t: '1 Litro', p: 28 }, { t: '5 Litros', p: 120 }] },
+    { id: 2,  nombre: 'Supercera Parket',           cat: 'Ceras',        tag: 'PARKET',     v: [{ t: '1 Litro', p: 28, antes: 32 }, { t: '5 Litros', p: 120, antes: 135 }] },
+    { id: 3,  nombre: 'Supercera Neutra',           cat: 'Ceras',        tag: 'NEUTRA',     v: [{ t: '1 Litro', p: 26 }, { t: '5 Litros', p: 110 }] },
+    { id: 4,  nombre: 'Virulim Intermedia',         cat: 'Virulim',      tag: 'INTERMEDIA', v: [{ t: '100 grs', p: 9 }] },
+    { id: 5,  nombre: 'Virulim Gruesa',             cat: 'Virulim',      tag: 'GRUESA',     v: [{ t: '100 grs', p: 9 }] },
+    { id: 6,  nombre: 'Virulim Extragruesa',        cat: 'Virulim',      tag: 'EXTRAGRUESA',v: [{ t: '100 grs', p: 10, antes: 12 }] },
+    { id: 7,  nombre: 'Lavandina Bom Bril 8x1',     cat: 'Lavandinas',   tag: 'LAVANDINA',  v: [{ t: '1 Litro', p: 8, antes: 10 }, { t: '5 Litros', p: 30, antes: 36 }] },
+    { id: 8,  nombre: 'Supercera Especial',         cat: 'Ceras',        tag: 'ESPECIAL',   v: [{ t: '1 Litro', p: 32 }, { t: '5 Litros', p: 135 }] },
+    { id: 9,  nombre: 'Virutilla Líquida',          cat: 'Líquidos',     tag: 'VIRUTILLA',  v: [{ t: '1 Litro', p: 22 }] },
+    { id: 10, nombre: 'Destapacaños (Nueva Fórmula)', cat: 'Destapacaños', tag: 'DESTAPA',  v: [{ t: '1 Litro', p: 25 }, { t: '5 Litros', p: 95, antes: 110 }] },
+    { id: 11, nombre: 'Eliminador de Sarro',        cat: 'Líquidos',     tag: 'SARRO',      v: [{ t: '1 Litro', p: 24 }, { t: '5 Litros', p: 90 }] }
+  ];
+  var colores = { 'Ceras': '#ff6b00', 'Lavandinas': '#1d6fd1', 'Virulim': '#00a86b', 'Destapacaños': '#00a86b', 'Líquidos': '#2aa3d6' };
+ 
+  /* ---------- ESTADO ---------- */
+  var carrito = [];          // [{key, nombre, size, precio, qty}]
+  var pedidos = [];          // Bitácora en sesión: [{id, fecha, resumen, sucursal, recojo, total, pago, estado}]
+  var filtro = 'Todos';
+  var soloOfertas = false;
+ 
+  /* ---------- REFERENCIAS ---------- */
+  var $grid = $('#productGrid'), $lista = $('#cartList'), $toast = $('#toast');
+  var $menu = $('#menuDropdown'), $modal = $('#checkoutModal');
+ 
+  // Respeta "reducir movimiento": desactiva animaciones jQuery
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { $.fx.off = true; }
+ 
+  /* ---------- UTILIDADES ---------- */
+  function bob(n) { return 'BOB ' + n.toFixed(2); }
+ 
+  // Imagen representativa (SVG embebido): botella o paquete de virulina
+  function imagen(p) {
+    var c = colores[p.cat], s;
+    if (p.cat === 'Virulim') {
+      s = '<rect x="38" y="52" width="124" height="96" rx="12" fill="#d5dbe0"/>' +
+          '<path d="M48 78q30-18 60 0t44 0M48 98q30-18 60 0t44 0M48 118q30-18 60 0t44 0" stroke="#9aa5ae" stroke-width="3" fill="none"/>' +
+          '<rect x="38" y="112" width="124" height="40" rx="10" fill="' + c + '"/>' +
+          '<text x="100" y="138" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">VIRULIM</text>';
+    } else {
+      s = '<rect x="82" y="16" width="36" height="20" rx="4" fill="#0b1a3d"/><rect x="88" y="36" width="24" height="16" fill="' + c + '"/>' +
+          '<rect x="52" y="50" width="96" height="136" rx="20" fill="' + c + '"/>' +
+          '<rect x="62" y="58" width="6" height="118" rx="3" fill="#fff" opacity=".35"/>' +
+          '<rect x="62" y="90" width="76" height="66" rx="6" fill="#fff"/>' +
+          '<text x="100" y="114" font-size="12" font-weight="800" fill="#0b1a3d" text-anchor="middle">BOM BRIL</text>' +
+          '<text x="100" y="134" font-size="9" font-weight="700" fill="' + c + '" text-anchor="middle">' + p.tag + '</text>';
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" font-family="Arial,sans-serif"><rect width="200" height="200" fill="#fff"/>' + s + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+ 
+  /* ---------- RENDER CATÁLOGO ----------
+     PATRÓN jQuery: .html() para renderizar las tarjetas */
+  function renderProductos() {
+    var lista = productos.filter(function (p) {
+      var esOferta = p.v.some(function (x) { return x.antes; });
+      return soloOfertas ? esOferta : (filtro === 'Todos' || p.cat === filtro);
+    });
+    if (!lista.length) { $grid.html('<p class="empty">No hay productos en esta categoría.</p>'); return; }
+ 
+    $grid.html(lista.map(function (p) {
+      var oferta = p.v.some(function (x) { return x.antes; });
+      var v0 = p.v[0];
+      var tamanos = p.v.map(function (x, i) {
+        return '<button class="size-btn' + (i === 0 ? ' active' : '') + '" data-i="' + i + '">' + x.t + '</button>';
+      }).join('');
+      return '<article class="card" data-id="' + p.id + '">' +
+        '<div class="card__media"><img src="' + imagen(p) + '" alt="' + p.nombre + '">' + (oferta ? '<span class="tag-offer">Oferta</span>' : '') + '</div>' +
+        '<div class="card__body"><h3 class="card__name">' + p.nombre + '</h3>' +
+        '<div class="sizes">' + tamanos + '</div>' +
+        '<div class="card__price"><span class="price">' + bob(v0.p) + '</span><s class="price-old">' + (v0.antes ? bob(v0.antes) : '') + '</s></div>' +
+        '<button class="btn btn--add btn-add">🛒 Reservar / Añadir</button></div></article>';
+    }).join(''));
+  }
+ 
+  // Cambio de presentación: actualiza el precio de la tarjeta
+  $grid.on('click', '.size-btn', function () {
+    var $card = $(this).closest('.card');
+    var p = productos.filter(function (x) { return x.id === Number($card.data('id')); })[0];
+    var v = p.v[$(this).data('i')];
+    $card.find('.size-btn').removeClass('active');
+    $(this).addClass('active');
+    $card.find('.price').text(bob(v.p));
+    $card.find('.price-old').text(v.antes ? bob(v.antes) : '');
+  });
+ 
+  /* ---------- FILTROS ----------
+     PATRÓN jQuery: .removeClass('active') / .addClass('active') */
+  $('#filters').on('click', '.chip', function () {
+    filtro = $(this).data('cat');
+    soloOfertas = false;
+    $('#filters .chip').removeClass('active');
+    $(this).addClass('active');
+    cambiarVista();
+  });
+  // Transición con fadeOut / fadeIn al cambiar de vista
+  function cambiarVista() {
+    $grid.stop(true, true).fadeOut(120, function () { renderProductos(); $grid.fadeIn(180); });
+    $('#catalogBody').scrollTop(0);
+  }
+ 
+  /* ---------- LÓGICA DEL CARRITO ---------- */
+  function agregar(p, v) {
+    var key = p.id + '|' + v.t;
+    var item = carrito.filter(function (i) { return i.key === key; })[0];
+    if (item) { item.qty = Math.min(item.qty + 1, 99); }              // ya existe: +1
+    else { carrito.push({ key: key, nombre: p.nombre, size: v.t, precio: v.p, qty: 1 }); } // nuevo
+    renderCarrito();
+  }
+ 
+  // PATRÓN jQuery: .html() para renderizar los ítems del carrito
+  function renderCarrito() {
+    if (!carrito.length) {
+      $lista.html('<li class="cart__empty">Tu carrito está vacío</li>');
+    } else {
+      $lista.html(carrito.map(function (i) {
+        return '<li class="cart-item" data-key="' + i.key + '">' +
+          '<div><p class="ci__name">' + i.nombre + '</p><p class="ci__size">' + i.size + ' · ' + bob(i.precio) + '</p></div>' +
+          '<div class="ci__side"><strong class="ci__sub">' + bob(i.precio * i.qty) + '</strong>' +
+          '<button class="ci__del" aria-label="Eliminar ' + i.nombre + '">❌</button></div>' +
+          '<div class="ci__qty"><button class="qty-minus" aria-label="Quitar uno"' + (i.qty <= 1 ? ' disabled' : '') + '>−</button>' +
+          '<span class="qty">' + i.qty + '</span><button class="qty-plus" aria-label="Agregar uno">+</button></div></li>';
+      }).join(''));
+    }
+    var sub = carrito.reduce(function (s, i) { return s + i.precio * i.qty; }, 0);
+    var cant = carrito.reduce(function (s, i) { return s + i.qty; }, 0);
+    var envio = carrito.length ? RECARGO : 0;
+    $('#subtotal').text(bob(sub));
+    $('#recargo').text(bob(envio));
+    $('#total').text(bob(sub + envio));
+    $('#cartBadge').text(cant);
+    $('#btnCheckout, #btnClear').prop('disabled', !carrito.length);
+  }
+  function totalActual() {
+    return carrito.reduce(function (s, i) { return s + i.precio * i.qty; }, 0) + (carrito.length ? RECARGO : 0);
+  }
+  function buscar($el) {
+    var key = $el.closest('.cart-item').attr('data-key');
+    return carrito.filter(function (i) { return i.key === key; })[0];
+  }
+ 
+  // Añadir desde el catálogo (delegación de eventos)
+  $grid.on('click', '.btn-add', function () {
+    var $card = $(this).closest('.card'), $btn = $(this);
+    var p = productos.filter(function (x) { return x.id === Number($card.data('id')); })[0];
+    agregar(p, p.v[$card.find('.size-btn.active').data('i')]);
+    $('#cartBadge').removeClass('bump'); void $('#cartBadge')[0].offsetWidth; $('#cartBadge').addClass('bump');
+    $btn.addClass('done').text('✔ Añadido');
+    setTimeout(function () { $btn.removeClass('done').text('🛒 Reservar / Añadir'); }, 900);
+  });
+ 
+  // Controles del carrito: [-] [+] ❌
+  $lista.on('click', '.qty-plus', function () { var it = buscar($(this)); if (it && it.qty < 99) { it.qty++; renderCarrito(); } });
+  $lista.on('click', '.qty-minus', function () { var it = buscar($(this)); if (it && it.qty > 1) { it.qty--; renderCarrito(); } });
+  $lista.on('click', '.ci__del', function () {
+    var it = buscar($(this));
+    $(this).closest('.cart-item').fadeOut(200, function () { carrito.splice(carrito.indexOf(it), 1); renderCarrito(); });
+  });
+ 
+  // Ícono del carrito en la navbar: baja al carrito (móvil) o lo resalta (PC)
+  $('#btnCart').on('click', function () {
+    cambiarTab('tabCart');
+    if ($(window).width() <= 1024) { $('html, body').animate({ scrollTop: $('#cartPanel').offset().top - 80 }, 400); }
+    else { $('#cartPanel').addClass('pulse'); setTimeout(function () { $('#cartPanel').removeClass('pulse'); }, 800); }
+  });
+ 
+  /* ---------- MENÚ HAMBURGUESA ---------- */
+  function cerrarMenu() { $menu.fadeOut(150); $('#btnMenu').attr('aria-expanded', 'false'); }
+  $('#btnMenu').on('click', function (e) {
+    e.stopPropagation();
+    var abierto = $menu.is(':visible');
+    if (abierto) { cerrarMenu(); } else { $menu.fadeIn(150); $(this).attr('aria-expanded', 'true'); }
+  });
+  // Cerrar el menú al hacer clic fuera (rúbrica)
+  $(document).on('click', function (e) {
+    if (!$(e.target).closest('#menuDropdown, #btnMenu').length) { cerrarMenu(); }
+  });
+  $('[data-action]').on('click', function (e) {
+    e.preventDefault();
+    var accion = $(this).data('action');
+    if (accion === 'inicio' || accion === 'catalogo') {
+      filtro = 'Todos'; soloOfertas = false;
+      $('#filters .chip').removeClass('active').filter('[data-cat="Todos"]').addClass('active');
+      cambiarVista();
+    } else if (accion === 'ofertas') {
+      soloOfertas = true;
+      $('#filters .chip').removeClass('active');
+      cambiarVista();
+    } else if (accion === 'contacto') {
+      mostrarToast('📞 Star Chemical · WhatsApp +591 7000 0000');
+    }
+    cerrarMenu();
+  });
+ 
+  /* ---------- TOAST ----------
+     PATRÓN jQuery: .slideDown() para entrar y .fadeOut() para salir */
+  function mostrarToast(msg, tipo) {
+    $toast.stop(true, true).hide().removeClass('error').addClass(tipo || '').text(msg)
+      .slideDown(300).delay(3200).fadeOut(400);
+  }
+ 
+  /* ---------- MODAL + VALIDACIÓN ---------- */
+  function setError($inp, msg) { $inp.toggleClass('invalid', !!msg).nextAll('.error-msg').first().text(msg || ''); }
+  var reNombre = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g;
+ 
+  function validarNombre() {
+    var v = $('#fName').val().trim();
+    if (!v) { setError($('#fName'), 'Escribe tu nombre completo.'); return false; }
+    if (v.length < 3) { setError($('#fName'), 'El nombre es demasiado corto.'); return false; }
+    setError($('#fName'), ''); return true;
+  }
+  function validarTelefono() {
+    var v = $('#fPhone').val();
+    if (!v) { setError($('#fPhone'), 'Escribe tu número de teléfono.'); return false; }
+    if (v.length < 7 || v.length > 8) { setError($('#fPhone'), 'Ingresa un número de 7 u 8 dígitos.'); return false; }
+    setError($('#fPhone'), ''); return true;
+  }
+  function hoyISO() { // fecha local de hoy en formato yyyy-mm-dd
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  function validarSucursal() {
+    if (!$('#fBranch').val()) { setError($('#fBranch'), 'Selecciona una sucursal.'); return false; }
+    setError($('#fBranch'), ''); return true;
+  }
+  function validarFecha() {
+    var v = $('#fDate').val();
+    if (!v) { setError($('#fDate'), 'Elige la fecha de recojo.'); return false; }
+    if (v < hoyISO()) { setError($('#fDate'), 'La fecha no puede ser anterior a hoy.'); return false; }
+    setError($('#fDate'), ''); return true;
+  }
+ 
+  // PATRÓN jQuery: .on('input') filtra en tiempo real; .on('blur') valida al salir del campo
+  $('#fName').on('input', function () {
+    var limpio = this.value.replace(reNombre, '');
+    if (limpio !== this.value) { this.value = limpio; setError($(this), 'Solo se permiten letras y espacios.'); }
+    else { setError($(this), ''); }
+  }).on('blur', validarNombre);
+ 
+  $('#fPhone').on('input', function () {
+    var limpio = this.value.replace(/\D/g, '');
+    if (limpio !== this.value) { this.value = limpio; setError($(this), 'Solo se permiten números.'); }
+    else { setError($(this), ''); }
+  }).on('blur', validarTelefono);
+ 
+  $('#fBranch').on('change blur', validarSucursal);
+  $('#fDate').on('change blur', validarFecha);
+ 
+  // Abrir modal con .fadeIn()
+  $('#btnCheckout').on('click', function () {
+    if (!carrito.length) { return; }
+    $('#modalTotal').text(bob(totalActual()));
+    $('#fDate').attr('min', hoyISO());
+    $modal.fadeIn(200, function () { $('#fName').trigger('focus'); });
+  });
+  // Cerrar modal con .fadeOut()
+  function cerrarModal() { $modal.fadeOut(200); }
+  $('#btnCloseModal').on('click', cerrarModal);
+  $modal.on('click', function (e) { if (e.target === this) { cerrarModal(); } });
+  $(document).on('keydown', function (e) { if (e.key === 'Escape') { cerrarModal(); cerrarMenu(); } });
+ 
+  // Confirmar pedido
+  $('#checkoutForm').on('submit', function (e) {
+    e.preventDefault();
+    var ok = [validarNombre(), validarTelefono(), validarSucursal(), validarFecha()].every(Boolean);
+    if (!ok) { mostrarToast('⚠️ Revisa los campos marcados', 'error'); return; }
+    var total = totalActual();
+    var sucursal = $('#fBranch').val();
+    mostrarToast('✅ ¡Reserva confirmada! Te esperamos en ' + sucursal);
+    registrarReserva(total, $('input[name=pago]:checked').val(), sucursal, $('#fDate').val()); // guarda en la Bitácora
+    carrito = [];
+    renderCarrito();
+    this.reset();
+    $(this).find('.invalid').removeClass('invalid');
+    $(this).find('.error-msg').text('');
+    cerrarModal();
+    cambiarTab('tabLog');                                        // cambia a la Bitácora
+  });
+ 
+  /* ---------- PESTAÑAS (Carrito / Bitácora) ----------
+     PATRÓN jQuery: .removeClass('active') / .addClass('active') + .fadeOut() / .fadeIn() */
+  function cambiarTab(id) {
+    var $btn = $('.tab[data-tab="' + id + '"]');
+    if ($btn.hasClass('active')) { return; }
+    $('.tab').removeClass('active');
+    $btn.addClass('active');
+    var $actual = $('.tab-pane.active'), $nuevo = $('#' + id);
+    $actual.fadeOut(120, function () {
+      $actual.removeClass('active').css('display', '');
+      // .hide() guarda display:flex para que .fadeIn() lo restaure sin romper el layout
+      $nuevo.addClass('active').hide().fadeIn(180);
+    });
+  }
+  $('.tab').on('click', function () { cambiarTab($(this).data('tab')); });
+ 
+  /* ---------- BITÁCORA DE RESERVAS ---------- */
+  function registrarReserva(total, pago, sucursal, recojo) {
+    var resumen = carrito.map(function (i) { return i.qty + 'x ' + i.nombre + ' ' + i.size; }).join(', ');
+    var n = pedidos.length + 1;
+    var f = recojo.split('-'); // yyyy-mm-dd -> dd/mm/yyyy
+    pedidos.push({
+      id: '#RES-' + ('00' + n).slice(-3),
+      fecha: new Date().toLocaleString('es-BO', { dateStyle: 'short', timeStyle: 'short' }),
+      resumen: resumen, sucursal: sucursal, recojo: f[2] + '/' + f[1] + '/' + f[0],
+      total: total, pago: pago, estado: '🟢 Confirmado / Listo para recoger', cancelada: false
+    });
+    renderBitacora();
+  }
+ 
+  // PATRÓN jQuery: .html() para renderizar la bitácora (la reserva más reciente va primero)
+  function renderBitacora() {
+    if (!pedidos.length) { $('#logList').html('<li class="cart__empty">Aún no tienes reservas</li>'); return; }
+    $('#logList').html(pedidos.slice().reverse().map(function (p) {
+      return '<li class="log-item' + (p.cancelada ? ' cancelled' : '') + '" data-id="' + p.id + '">' +
+        '<div class="log__top"><span class="log__id">' + p.id + '</span><span class="log__date">' + p.fecha + '</span></div>' +
+        '<p class="log__items">' + p.resumen + '</p>' +
+        '<p class="log__branch">📍 ' + p.sucursal + ' · Recojo: ' + p.recojo + '</p>' +
+        '<div class="log__bottom"><span class="log__total">' + bob(p.total) + ' · ' + p.pago + '</span><span class="log__state">' + (p.cancelada ? '🔴 Cancelada' : p.estado) + '</span></div>' +
+        (p.cancelada ? '' : '<div class="log__actions"><button class="btn-cancel-res">Cancelar reserva</button></div>') + '</li>';
+    }).join(''));
+  }
+ 
+  /* ---------- CANCELAR RESERVA (confirmación en dos pasos, delegación de eventos) ---------- */
+  var AVISO = '<span class="log__ask">¿Cancelar esta reserva?</span><button class="btn-cancel-yes">Sí, cancelar</button><button class="btn-cancel-no">No</button>';
+  $('#logList').on('click', '.btn-cancel-res', function () {
+    $(this).parent().html(AVISO);                       // paso 1: pedir confirmación
+  }).on('click', '.btn-cancel-no', function () {
+    $(this).parent().html('<button class="btn-cancel-res">Cancelar reserva</button>');
+  }).on('click', '.btn-cancel-yes', function () {     // paso 2: cancelar
+    var id = $(this).closest('.log-item').attr('data-id');
+    var r = pedidos.filter(function (p) { return p.id === id; })[0];
+    if (r) { r.cancelada = true; renderBitacora(); mostrarToast('🚫 Reserva ' + id + ' cancelada', 'error'); }
+  });
+ 
+  /* ---------- VACIAR CARRITO ---------- */
+  $('#btnClear').on('click', function () {
+    if (!carrito.length) { return; }
+    $lista.fadeOut(150, function () {
+      carrito = [];
+      renderCarrito();
+      $lista.fadeIn(150);
+      mostrarToast('🗑️ Carrito vaciado');
+    });
+  });
+ 
+  /* ---------- TEMA CLARO / OSCURO ----------
+     PATRÓN jQuery: .toggleClass('dark-mode') en el body + .html() para cambiar el ícono */
+  var $body = $('body'), $btnTheme = $('#btnTheme');
+  function actualizarIconoTema() {
+    var oscuro = $body.hasClass('dark-mode');
+    $btnTheme.html(oscuro ? '☀️' : '🌙').attr({
+      'aria-label': oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      'aria-pressed': oscuro
+    });
+  }
+  $btnTheme.on('click', function () {
+    $body.toggleClass('dark-mode');
+    actualizarIconoTema();
+    try { localStorage.setItem('sc-theme', $body.hasClass('dark-mode') ? 'dark' : 'light'); } catch (err) { /* sin almacenamiento */ }
+  });
+  // Recuerda la última elección del usuario (claro por defecto)
+  try { if (localStorage.getItem('sc-theme') === 'dark') { $body.addClass('dark-mode'); } } catch (err) { /* sin almacenamiento */ }
+  actualizarIconoTema();
+ 
+  /* ---------- INICIO ---------- */
+  renderProductos();
+  renderCarrito();
+  renderBitacora();
+});
+ 
+  </script>
+</body>
+</html>
