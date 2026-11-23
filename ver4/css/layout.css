@@ -1,0 +1,66 @@
+/* ==========================================================
+   Layout Responsivo Mobile-First (CSS Grid + Flexbox)
+   Guía Práctica Parte 2 - Avance Semana 3
+   ========================================================== */
+
+/* Base Mobile-First: 1 columna en pantallas pequeñas */
+.catalogo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Escalado a múltiples columnas a partir de 768px */
+@media (min-width: 768px) {
+  .catalogo-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+/* Estado de simulación de vista móvil (1 columna compacta) */
+.catalogo-grid.sim-movil {
+  grid-template-columns: 1fr;
+  max-width: 380px;
+  margin-inline: auto;
+}
+
+/* Alineación vertical con Flexbox en el cuerpo de la tarjeta */
+.card-cuerpo,
+.card-item__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  flex: 1;
+}
+
+.card-item__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btn-simular-vista {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: 1.5px solid var(--input-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-simular-vista:hover {
+  border-color: var(--green);
+  color: var(--green-text);
+}
+
+.btn-simular-vista--activo {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
