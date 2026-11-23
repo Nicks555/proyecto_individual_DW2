@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Star Chemical – Tienda Bom Bril</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1a3d">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- jQuery 3.7.1 en el <head>, ANTES del CSS -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Sanitización HTML dinámica (DOMPurify) -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Componente encapsulado de tarjeta, Layout Responsivo y Accesibilidad -->
+  <link rel="stylesheet" href="css/tarjeta.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/accesibilidad.css">
+
+  <style>
+    /* ===== Colores de marca como CSS Custom Properties ===== */
+    :root {
+      --bg: #f4f7f6; --panel: #ffffff; --navy: #0b1a3d; --green: #00a86b; --green-dark: #008a58; --orange: #ff6b00;
+      --text: #0b1a3d; --muted: #667089; --line: #e2e9e6; --input-border: #cdd7d3; --active-bg: #effaf5;
+      --summary-bg: #fbfdfc; --danger-bg: #fdeaea; --green-text: #008a58; --btn-add: #0b1a3d; --btn-add-hover: #17306e;
+      --danger: #c62828; --nav-h: 64px; --bottom-nav-h: 62px; --shadow: 0 2px 14px rgba(11, 26, 61, .08);
+    }
+    /* ===== MODO OSCURO ===== */
+    body.dark-mode {
+      color-scheme: dark; --bg: #12141c; --panel: #1e212b; --text: #f4f7f6; --line: #2a2e42; --muted: #9aa3b8;
+      --input-border: #3a3f58; --active-bg: rgba(0, 168, 107, .16); --summary-bg: #191c25; --danger-bg: rgba(198, 40, 40, .22);
+      --green-text: #2fd39a; --btn-add: #1f3a82; --btn-add-hover: #2a4aa0; --shadow: 0 2px 14px rgba(0, 0, 0, .45);
+    }
+    body.dark-mode .chip.active { background: var(--green); color: #fff; }
+    body.dark-mode .toast { background: #2a2e42; }
+    body.dark-mode .navbar { border-bottom: 1px solid var(--line); }
+    body, .panel, .card-item, .menu, .modal, .chip, .size-btn, .tab, .cart__summary, .modal input, .toast, .ci__qty button, .modal__close, .navbar, .btn--add, .bottom-nav, .filter-dropdown-btn, .carousel-arrow {
+      transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var(--bg); display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; width: 100%; overflow-x: hidden; }
+    h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+    button { font: inherit; cursor: pointer; border: 0; }
+    :focus-visible { outline: 3px solid #0d9488; outline-offset: 2px; }
+
+    /* ===== BEM + Control de CLS (Estabilidad Visual) ===== */
+    .tarjeta-ods__imagen { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; cursor: zoom-in; }
+    .tarjeta-ods__boton--destacado { background: #0f172a; color: #fff; border-bottom: 3px solid #f97316; }
+
+    /* ===== NAVBAR ===== */
+    .navbar { flex: none; height: var(--nav-h); background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 120; }
+    .navbar__left { display: flex; align-items: center; gap: 14px; }
+    .navbar__right { display: flex; align-items: center; gap: 6px; }
+    .icon-btn { background: transparent; color: #fff; font-size: 1.6rem; width: 42px; height: 42px; border-radius: 10px; }
+    .icon-btn:hover { background: rgba(255,255,255,.12); }
+    .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; }
+    .brand__name { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.15rem; }
+    .brand__name small { font-weight: 600; color: var(--green); font-size: .85em; }
+    .cart-btn { position: relative; background: transparent; color: #fff; font-size: 1.6rem; width: 46px; height: 46px; border-radius: 12px; }
+    .cart-btn:hover { background: rgba(255,255,255,.12); }
+    .badge { position: absolute; top: 0; right: -2px; min-width: 22px; height: 22px; padding: 0 6px; background: var(--orange); color: var(--navy); font: 800 .75rem/22px 'Montserrat', sans-serif; border-radius: 11px; text-align: center; }
+    .badge--bump { animation: bump .35s; }
+    @keyframes bump { 50% { transform: scale(1.35); } }
+    .menu { display: none; position: absolute; top: calc(var(--nav-h) - 6px); left: 20px; width: 230px; padding: 8px; background: var(--panel); border-radius: 12px; box-shadow: 0 10px 30px rgba(11,26,61,.25); }
+    .menu a { display: block; padding: 11px 14px; border-radius: 8px; color: var(--text); text-decoration: none; font-weight: 600; }
+    .menu a:hover { background: var(--bg); color: var(--green-text); }
+
+    /* ===== DASHBOARD (2 columnas en PC) ===== */
+    .dashboard { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; padding: 20px; }
+    .panel { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .section-hidden { display: none !important; }
+
+    /* ===== CATÁLOGO, FILTROS DESPLEGABLES Y SECCIÓN GALERÍA ===== */
+    .catalog__head { padding: 20px 24px 16px; border-bottom: 1px solid var(--line); }
+    .catalog__head-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .catalog__head h1, .catalog__head h2 { font-size: 1.3rem; margin: 0; }
+    .catalog__sub { font-size: .88rem; color: var(--muted); }
+
+    .filter-menu-wrapper { position: relative; }
+    .filter-dropdown-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1.5px solid var(--line);
+      font-weight: 700;
+      font-size: .88rem;
+    }
+    .filter-dropdown-btn:hover { border-color: var(--green); }
+    .filter-dropdown-btn__arrow { display: inline-block; transition: transform .2s ease; }
+    .filter-dropdown-btn[aria-expanded="true"] .filter-dropdown-btn__arrow { transform: rotate(180deg); }
+
+    .chips {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--summary-bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .chips.open { display: flex; }
+
+    .chip { padding: 8px 16px; border-radius: 999px; background: var(--bg); color: var(--text); font-weight: 600; font-size: .88rem; border: 1.5px solid transparent; transition: background .2s, color .2s; }
+    .chip:hover { border-color: var(--text); }
+    .chip.active { background: var(--navy); color: #fff; }
+    .chip--offer.active { background: var(--orange); color: var(--navy); }
+
+    .catalog__body { flex: 1; overflow-y: auto; padding: 20px 24px 28px; position: relative; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 40px 0; }
+
+    /* Flechas flotantes estilo imagen de referencia (visibles solo en vista celular) */
+    .carousel-arrow { display: none; }
+
+    .tag-offer { position: absolute; top: 10px; left: 10px; background: var(--orange); color: var(--navy); font: 800 .72rem 'Montserrat', sans-serif; padding: 4px 10px; border-radius: 6px; }
+    .sizes { display: flex; flex-wrap: wrap; gap: 6px; }
+    .size-btn { padding: 5px 12px; border-radius: 8px; background: var(--panel); border: 1.5px solid var(--line); font-size: .82rem; font-weight: 600; color: var(--muted); }
+    .size-btn.active { border-color: var(--green); color: var(--green-text); background: var(--active-bg); }
+    .card-item__price { display: flex; align-items: baseline; gap: 8px; }
+    .price { font: 800 1.2rem 'Montserrat', sans-serif; }
+    .price-old { color: var(--muted); font-size: .85rem; }
+    .btn { border-radius: 10px; padding: 11px 16px; font-weight: 700; transition: background .2s, transform .1s; }
+    .btn:active { transform: translateY(1px); }
+    .btn--add { background: var(--btn-add); color: #fff; }
+    .btn--add:hover { background: var(--btn-add-hover); }
+    .btn--add--done { background: var(--green-dark); }
+    .btn--back { background: var(--bg); color: var(--text); border: 1.5px solid var(--line); padding: 8px 14px; font-size: .85rem; }
+    .btn--back:hover { border-color: var(--green); color: var(--green-text); }
+    .btn--pay { width: 100%; background: var(--green); color: #fff; font-size: 1.05rem; padding: 15px; box-shadow: 0 4px 12px rgba(0,168,107,.3); }
+    .btn--pay:hover:not(:disabled) { background: var(--green-dark); }
+    .btn--pay:disabled { background: #b8c4c0; box-shadow: none; cursor: not-allowed; }
+    .btn--ghost { width: 100%; margin-top: 10px; background: transparent; color: var(--muted); border: 1.5px solid var(--line); }
+    .btn--ghost:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+    .btn--ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ===== SECCIÓN INDEPENDIENTE GALERÍA DE RESULTADOS ===== */
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+    .gallery-card { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .gallery-card__img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; cursor: zoom-in; }
+    .gallery-card__caption { padding: 12px 14px; font-size: .88rem; font-weight: 600; color: var(--text); }
+
+    /* ===== PANEL LATERAL: pestañas Carrito / Mis Reservas ===== */
+    .tabs { flex: none; display: flex; border-bottom: 1px solid var(--line); }
+    .tab { flex: 1; padding: 16px 8px; background: transparent; color: var(--muted); font: 700 .88rem 'Montserrat', sans-serif; border-bottom: 3px solid transparent; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--green); }
+    .cart__close { display: none; flex: none; width: 46px; background: transparent; color: var(--muted); font-size: 1.2rem; }
+    .tab-pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .tab-pane.active { display: flex; }
+
+    /* ===== MIS RESERVAS ===== */
+    .log-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+    .log__top { display: flex; justify-content: space-between; align-items: baseline; }
+    .log__id { font: 800 .95rem 'Montserrat', sans-serif; }
+    .log__date { font-size: .78rem; color: var(--muted); }
+    .log__items { font-size: .88rem; }
+    .log__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 10px; margin-top: 4px; }
+    .log__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .log__ask { font-size: .82rem; font-weight: 600; }
+    .btn-cancel-res, .btn-cancel-yes, .btn-cancel-no { padding: 6px 12px; border-radius: 8px; font-size: .8rem; font-weight: 700; background: transparent; border: 1.5px solid var(--line); color: var(--muted); }
+    .btn-cancel-res:hover, .btn-cancel-yes { border-color: var(--danger); color: var(--danger); }
+    .btn-cancel-yes:hover { background: var(--danger-bg); }
+    .btn-cancel-no:hover { border-color: var(--text); color: var(--text); }
+    .log-item--cancelled .log__items, .log-item--cancelled .log__total { text-decoration: line-through; opacity: .6; }
+    .log-item--cancelled .log__state { color: var(--danger); }
+    .log__branch { font-size: .82rem; color: var(--muted); }
+    .log__total { font: 800 1rem 'Montserrat', sans-serif; color: var(--green); }
+    .log__state { font-size: .8rem; font-weight: 600; color: var(--green-text); }
+
+    /* ===== CARRITO ===== */
+    .cart__list { flex: 1; overflow-y: auto; list-style: none; padding: 8px 22px; }
+    .cart__empty { color: var(--muted); text-align: center; padding: 50px 0; }
+    .cart-item { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .ci__name { font-weight: 600; font-size: .93rem; }
+    .ci__size { font-size: .8rem; color: var(--muted); }
+    .ci__qty { display: flex; align-items: center; gap: 4px; }
+    .ci__qty button { width: 28px; height: 28px; border-radius: 8px; background: var(--bg); color: var(--text); font-weight: 800; }
+    .ci__qty button:hover:not(:disabled) { background: var(--navy); color: #fff; }
+    .ci__qty button:disabled { opacity: .4; cursor: not-allowed; }
+    .ci__qty .qty { min-width: 30px; text-align: center; font-weight: 700; }
+    .ci__side { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .ci__sub { font-family: 'Montserrat', sans-serif; }
+    .ci__del { background: transparent; font-size: .85rem; padding: 4px; border-radius: 6px; }
+    .ci__del:hover { background: var(--danger-bg); }
+    .cart__summary { flex: none; padding: 16px 22px 22px; border-top: 1px solid var(--line); background: var(--summary-bg); }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--muted); }
+    .row--total { color: var(--text); font: 800 1.1rem 'Montserrat', sans-serif; margin: 12px 0 16px; }
+    .row--total span:last-child { color: var(--green); font-size: 1.45rem; }
+    .cart--pulse { animation: pulse .8s; }
+    @keyframes pulse { 40% { box-shadow: 0 0 0 4px var(--orange); } }
+
+    /* ===== MODALES Y LIGHTBOX ===== */
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 300; overflow-y: auto; padding: 20px; background: rgba(11,26,61,.65); }
+    .modal { position: relative; max-width: 460px; margin: 6vh auto; background: var(--panel); border-radius: 16px; padding: 28px; }
+    .modal h2 { font-size: 1.3rem; }
+    .modal__close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); color: var(--text); }
+    .modal__total { margin: 6px 0 18px; color: var(--muted); }
+    .modal__total strong { color: var(--green); font-family: 'Montserrat', sans-serif; font-size: 1.1rem; }
+    .modal label:not(.radio), .modal legend { display: block; font-weight: 600; font-size: .88rem; margin-top: 14px; }
+    .modal input[type=text], .modal input[type=date], .modal select { width: 100%; margin-top: 6px; padding: 12px 14px; border: 1.5px solid var(--input-border); background: var(--bg); color: var(--text); border-radius: 10px; font: inherit; }
+    .modal input[type=text]:focus, .modal input[type=date]:focus, .modal select:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 3px rgba(0,168,107,.2); }
+    .modal input.invalid, .modal select.invalid { border-color: var(--danger); }
+    .error-msg { display: block; min-height: 18px; margin-top: 4px; font-size: .8rem; color: var(--danger); }
+    .modal fieldset { border: 0; margin-bottom: 18px; }
+    .radio { display: inline-flex; align-items: center; gap: 6px; margin: 8px 16px 0 0; cursor: pointer; }
+    .radio input { accent-color: var(--green); }
+    .install-info { white-space: pre-line; margin: 12px 0 18px; color: var(--muted); font-size: .92rem; line-height: 1.45; }
+
+    .lightbox-modal { max-width: 760px; padding: 20px; text-align: center; }
+    .lightbox-modal img { max-width: 100%; max-height: 75vh; width: auto; height: auto; object-fit: contain; margin: 12px auto; display: block; border-radius: 10px; }
+    .lightbox-caption { font-size: .95rem; font-weight: 600; color: var(--text); }
+
+    /* ===== TOAST ===== */
+    .toast { display: none; position: fixed; top: 76px; right: 20px; z-index: 400; max-width: 360px; padding: 14px 20px; border-radius: 12px; background: var(--navy); color: #fff; font-weight: 600; border-left: 5px solid var(--green); box-shadow: 0 10px 30px rgba(11,26,61,.3); }
+    .toast--error { border-left-color: var(--orange); }
+
+    /* ===== BARRA INFERIOR EN CELULAR (oculta en escritorio) ===== */
+    .bottom-nav { display: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1280px) and (min-width: 1025px) {
+      .dashboard { grid-template-columns: minmax(0, 1fr) 330px; }
+    }
+
+    @media (max-width: 1024px) {
+      body { padding-bottom: var(--bottom-nav-h); }
+      /* En celular se quitan menú hamburguesa y carrito del nav superior porque van en el menú inferior */
+      #btnMenu, #menuDropdown, #btnCart { display: none !important; }
+
+      .dashboard { display: flex; flex-direction: column; padding: 12px; gap: 0; }
+      .catalog__head { padding: 14px 16px; }
+      .catalog__head h1, .catalog__head h2 { font-size: 1.05rem; }
+      .btn--back { padding: 6px 10px; font-size: .78rem; }
+      .filter-dropdown-btn { padding: 6px 12px; font-size: .8rem; }
+      .chips { gap: 6px; padding: 10px; }
+      .chip { padding: 6px 12px; font-size: .78rem; }
+
+      .catalog__body { padding: 14px 16px 24px; position: relative; }
+
+      /* Flechas flotantes estilo botón circular semitransparente de la imagen */
+      .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 25;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(15, 118, 110, 0.72);
+        border: 2px solid rgba(255, 255, 255, 0.75);
+        color: #ffffff;
+        font-size: 1.55rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 16px rgba(11, 26, 61, 0.25);
+        backdrop-filter: blur(2px);
+      }
+      .carousel-arrow--prev { left: 8px; }
+      .carousel-arrow--next { right: 8px; }
+      .carousel-arrow:hover, .carousel-arrow:active { background: rgba(15, 118, 110, 0.92); }
+
+      /* Deslizamiento horizontal en lugar de scroll vertical en celular */
+      .grid {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .grid::-webkit-scrollbar { display: none; }
+      .grid .card-item {
+        flex: 0 0 calc(50% - 6px);
+        min-width: calc(50% - 6px);
+        scroll-snap-align: start;
+      }
+      .size-btn { padding: 4px 8px; font-size: .74rem; }
+      .price { font-size: 1rem; }
+      .btn--add { padding: 8px 10px; font-size: .78rem; }
+      .tag-offer { top: 6px; left: 6px; padding: 3px 7px; font-size: .64rem; }
+
+      /* Panel lateral deslizante para Carrito / Mis Reservas en celular */
+      .cart {
+        position: fixed; top: var(--nav-h); right: 0; bottom: var(--bottom-nav-h); width: min(380px, 100%); z-index: 130; border-radius: 16px 0 0 16px;
+        transform: translateX(105%); visibility: hidden; transition: transform .3s ease, visibility 0s .3s; box-shadow: -8px 0 30px rgba(11,26,61,.3);
+      }
+      .cart.open { transform: translateX(0); visibility: visible; transition: transform .3s ease; }
+      .cart__close { display: block; }
+      .toast { top: 72px; left: 12px; right: 12px; max-width: none; }
+
+      /* Menú inferior fijo en celular */
+      .bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--bottom-nav-h);
+        background: linear-gradient(90deg, #0b1220 0%, #101d3b 50%, #1b1035 100%);
+        border-top: 1px solid rgba(255, 255, 255, .12);
+        z-index: 140;
+        padding: 4px 6px;
+      }
+      .bottom-nav__btn {
+        position: relative;
+        background: transparent;
+        color: #9ca3af;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-size: .68rem;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 2px 4px;
+      }
+      .bottom-nav__btn span:first-child { font-size: 1.05rem; line-height: 1; }
+      .bottom-nav__btn.active { color: #34d399; }
+      .bottom-nav__badge {
+        position: absolute;
+        top: 2px;
+        right: 14%;
+        min-width: 17px;
+        height: 17px;
+        padding: 0 4px;
+        border-radius: 9px;
+        background: var(--orange);
+        color: var(--navy);
+        font: 800 .65rem/17px 'Montserrat', sans-serif;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar { padding: 0 12px; }
+      .brand { gap: 6px; }
+      .brand__name { font-size: .95rem; }
+      .brand__name small { display: none; }
+      .modal { margin: 3vh auto; padding: 22px 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms; animation-iteration-count: 1; transition-duration: 0.01ms; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ 1. NAVBAR ============ -->
+  <header class="navbar">
+    <div class="navbar__left">
+      <button id="btnMenu" class="icon-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuDropdown">☰</button>
+      <a class="brand" href="#" data-action="inicio">
+        <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="11" cy="20" r="8" fill="none" stroke="#00a86b" stroke-width="2.5"/>
+          <circle cx="23" cy="11" r="5.5" fill="none" stroke="#ff6b00" stroke-width="2.5"/>
+          <circle cx="24" cy="25" r="3" fill="#fff"/>
+        </svg>
+        <span class="brand__name">Star Chemical <small>(Bom Bril)</small></span>
+      </a>
+    </div>
+    <div class="navbar__right">
+      <button id="btnTheme" class="icon-btn" aria-label="Cambiar a modo oscuro" aria-pressed="false">🌙</button>
+      <button id="btnCart" class="cart-btn" aria-label="Ir al carrito">🛒<span id="cartBadge" class="badge">0</span></button>
+    </div>
+
+    <nav id="menuDropdown" class="menu" aria-label="Menú principal">
+      <a href="#" data-action="inicio">Inicio</a>
+      <a href="#" data-action="catalogo">Catálogo</a>
+      <a href="#" data-action="ofertas">Ofertas</a>
+      <a href="#" data-action="galeria">Galería de Resultados</a>
+      <a href="#" data-action="reservas">Mis Reservas</a>
+      <a href="#" data-action="contacto">Contacto</a>
+      <a href="#" data-action="instalar" id="menuInstall">📲 Instalar app</a>
+    </nav>
+  </header>
+
+  <!-- ============ IMÁGENES DE PRODUCTOS EN HTML (SOLO PEGA LA RUTA EN src="") ============ -->
+  <template id="plantilla-imagenes-productos">
+    <img data-prod-id="1"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190426.png" alt="Supercera Machimbre - Bom Bril">
+    <img data-prod-id="2"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190438.png" alt="Supercera Parket - Bom Bril">
+    <img data-prod-id="3"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190446.png" alt="Supercera Neutra - Bom Bril">
+    <img data-prod-id="4"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190500.png" alt="Virulim Intermedia - Bom Bril">
+    <img data-prod-id="5"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190500.png" alt="Virulim Gruesa - Bom Bril">
+    <img data-prod-id="6"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190500.png" alt="Virulim Extragruesa - Bom Bril">
+    <img data-prod-id="7"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190524.png" alt="Lavandina Bom Bril 8x1 - Bom Bril">
+    <img data-prod-id="8"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190544.png" alt="Supercera Especial - Bom Bril">
+    <img data-prod-id="9"  class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190551.png" alt="Virutilla Líquida - Bom Bril">
+    <img data-prod-id="10" class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190643.png" alt="Destapacaños (Nueva Fórmula) - Bom Bril">
+    <img data-prod-id="11" class="card-item__imagen tarjeta-ods__imagen" src="img/Screenshot 2026-11-23 190649.png" alt="Eliminador de Sarro - Bom Bril">
+  </template>
+
+  <!-- ============ DASHBOARD ============ -->
+  <main class="dashboard">
+
+    <!-- 2. SECCIÓN CATÁLOGO -->
+    <section class="panel catalog" id="catalogPanel">
+      <div class="catalog__head">
+        <div class="catalog__head-top">
+          <h1>Catálogo de Productos - Bom Bril</h1>
+          <button type="button" class="btn btn--back" data-action="galeria">✨ Ver Galería de Resultados</button>
+        </div>
+
+        <div class="filter-menu-wrapper">
+          <button type="button" id="btnToggleFilters" class="filter-dropdown-btn" aria-expanded="false" aria-controls="filters">
+            <span>🎛️ Filtros</span>
+            <span id="activeFilterLabel" class="catalog__sub">· Todos</span>
+            <span class="filter-dropdown-btn__arrow" aria-hidden="true">▾</span>
+          </button>
+
+          <div id="filters" class="chips" role="group" aria-label="Filtrar por categoría">
+            <button type="button" class="chip active" data-cat="Todos">Todos</button>
+            <button type="button" class="chip chip--offer" data-cat="Ofertas">🔥 Ofertas</button>
+            <button type="button" class="chip" data-cat="Ceras">Ceras</button>
+            <button type="button" class="chip" data-cat="Lavandinas">Lavandinas</button>
+            <button type="button" class="chip" data-cat="Virulim">Virulim</button>
+            <button type="button" class="chip" data-cat="Destapacaños">Destapacaños</button>
+            <button type="button" class="chip" data-cat="Líquidos">Líquidos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="catalog__body" id="catalogBody">
+        <button type="button" id="btnSlidePrev" class="carousel-arrow carousel-arrow--prev" aria-label="Producto anterior">‹</button>
+        <div id="productGrid" class="grid catalogo-grid"></div>
+        <button type="button" id="btnSlideNext" class="carousel-arrow carousel-arrow--next" aria-label="Siguiente producto">›</button>
+      </div>
+    </section>
+
+    <!-- 3. SECCIÓN INDEPENDIENTE: GALERÍA DE RESULTADOS -->
+    <section class="panel catalog section-hidden" id="galleryPanel" aria-label="Galería de resultados de limpieza">
+      <div class="catalog__head">
+        <div class="catalog__head-top">
+          <div>
+            <h2>Galería de Resultados con Bom Bril</h2>
+            <p class="catalog__sub">Toca cualquier imagen para verla completa.</p>
+          </div>
+          <button type="button" class="btn btn--back" data-action="catalogo">← Volver al Catálogo</button>
+        </div>
+      </div>
+      <div class="catalog__body">
+        <div id="galleryGrid" class="gallery-grid"></div>
+      </div>
+    </section>
+
+    <!-- 4. PANEL LATERAL: Carrito / Mis Reservas -->
+    <aside class="panel cart" id="cartPanel" aria-label="Panel lateral">
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="tabCart">🛒 Mi Carrito</button>
+        <button class="tab" role="tab" data-tab="tabLog">📋 Mis Reservas</button>
+        <button class="cart__close" id="btnCloseCart" aria-label="Cerrar panel">✕</button>
+      </div>
+
+      <section id="tabCart" class="tab-pane active" role="tabpanel">
+        <ul id="cartList" class="cart__list"></ul>
+        <div class="cart__summary">
+          <div class="row"><span>Subtotal</span><span id="subtotal">BOB 0.00</span></div>
+          <div class="row"><span>Recargo por reserva</span><span id="recargo">BOB 0.00</span></div>
+          <div class="row row--total"><span>TOTAL</span><span id="total">BOB 0.00</span></div>
+          <button id="btnCheckout" class="btn btn--pay" disabled>Proceder a Reservar</button>
+          <button id="btnClear" class="btn btn--ghost" disabled>🗑️ Vaciar carrito</button>
+        </div>
+      </section>
+
+      <section id="tabLog" class="tab-pane" role="tabpanel">
+        <ul id="logList" class="cart__list"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <!-- ============ BARRA INFERIOR EN VISTA CELULAR ============ -->
+  <nav class="bottom-nav" id="mobileBottomNav" aria-label="Navegación inferior móvil">
+    <button type="button" class="bottom-nav__btn active" data-bnav="inicio"><span>🏠</span><span>Inicio</span></button>
+    <button type="button" class="bottom-nav__btn" data-bnav="catalogo"><span>🧴</span><span>Catálogo</span></button>
+    <button type="button" class="bottom-nav__btn" data-bnav="galeria"><span>✨</span><span>Resultados</span></button>
+    <button type="button" class="bottom-nav__btn" data-bnav="carrito">
+      <span>🛒</span><span>Carrito</span>
+      <span id="bottomCartBadge" class="bottom-nav__badge">0</span>
+    </button>
+    <button type="button" class="bottom-nav__btn" data-bnav="reservas"><span>📋</span><span>Mis Reservas</span></button>
+  </nav>
+
+  <!-- ============ 5. MODAL DE RESERVA ============ -->
+  <div id="checkoutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <button type="button" id="btnCloseModal" class="modal__close" aria-label="Cerrar">✕</button>
+      <h2 id="modalTitle">Confirmar reserva</h2>
+      <p class="modal__total">Total a pagar: <strong id="modalTotal">BOB 0.00</strong></p>
+
+      <form id="checkoutForm" novalidate>
+        <label for="fName">Nombre de la persona</label>
+        <input id="fName" type="text" autocomplete="name" placeholder="Ej. María Quispe">
+        <span class="error-msg" aria-live="polite"></span>
+
+        <label for="fPhone">Celular de contacto (máx. 8 dígitos)</label>
+        <input id="fPhone" type="text" inputmode="numeric" autocomplete="tel" maxlength="8" placeholder="Ej. 71234567">
+        <span class="error-msg" aria-live="polite"></span>
+
+        <label for="fBranch">Sucursal</label>
+        <select id="fBranch">
+          <option value="">Selecciona una sucursal</option>
+          <option value="Sucursal Centro">Sucursal Centro (Av. Mariscal Santa Cruz)</option>
+          <option value="Sucursal Miraflores">Sucursal Miraflores (Av. Saavedra)</option>
+          <option value="Sucursal Sopocachi">Sucursal Sopocachi (Av. 20 de Octubre)</option>
+          <option value="Sucursal El Alto">Sucursal El Alto (Av. 6 de Marzo)</option>
+          <option value="Sucursal Zona Sur">Sucursal Zona Sur (Av. Ballivián, Calacoto)</option>
+        </select>
+        <span class="error-msg" aria-live="polite"></span>
+
+        <label for="fDate">Fecha de recojo</label>
+        <input id="fDate" type="date">
+        <span class="error-msg" aria-live="polite"></span>
+
+        <fieldset>
+          <legend>Método de pago</legend>
+          <label class="radio"><input type="radio" name="pago" value="Efectivo" checked> Efectivo</label>
+          <label class="radio"><input type="radio" name="pago" value="QR"> QR</label>
+          <label class="radio"><input type="radio" name="pago" value="Transferencia"> Transferencia</label>
+        </fieldset>
+
+        <button type="submit" class="btn btn--pay tarjeta-ods__boton--destacado">Confirmar y Enviar por WhatsApp</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ 6. MODAL VISOR DE IMAGEN COMPLETA ============ -->
+  <div id="lightboxModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lightboxCaption">
+    <div class="modal lightbox-modal">
+      <button type="button" id="btnCloseLightbox" class="modal__close" aria-label="Cerrar imagen">✕</button>
+      <img id="lightboxImg" src="" alt="">
+      <p id="lightboxCaption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <!-- ============ 7. MODAL DE AYUDA PARA INSTALAR LA APP ============ -->
+  <div id="installModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="modal">
+      <h2 id="installTitle">📲 Instalar Star Chemical</h2>
+      <p id="installInfo" class="install-info"></p>
+      <button type="button" id="btnInstallOk" class="btn btn--pay">Entendido</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Lógica de componentes y accesibilidad -->
+  <script src="js/tarjeta.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/accesibilidad.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
