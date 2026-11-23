@@ -1,0 +1,250 @@
+/* ==========================================================
+   Accesibilidad Web (a11y) y Modo Alto Contraste
+   Guía Práctica Parte 1 - CSS Base
+   ========================================================== */
+
+:focus-visible {
+  outline: 3px solid #0d9488;
+  outline-offset: 2px;
+}
+
+body.alto-contraste {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body.alto-contraste .panel,
+body.alto-contraste .modal,
+body.alto-contraste .menu,
+body.alto-contraste .cart__summary {
+  background-color: #0b0f19;
+  color: #ffffff;
+  border-color: #facc15;
+}
+
+body.alto-contraste .card-item {
+  border: 2px solid #facc15;
+  background: #111827;
+  color: #ffffff;
+}
+
+body.alto-contraste .card-item__estado,
+body.alto-contraste .price-old,
+body.alto-contraste .row,
+body.alto-contraste .modal__total,
+body.alto-contraste .install-info {
+  color: #e5e7eb;
+}
+
+body.alto-contraste .chip,
+body.alto-contraste .size-btn,
+body.alto-contraste .btn-simular-vista,
+body.alto-contraste .card-item__simular {
+  background-color: #111827;
+  color: #ffffff;
+  border: 1.5px solid #facc15;
+}
+
+body.alto-contraste .chip.active,
+body.alto-contraste .size-btn.active,
+body.alto-contraste .btn-simular-vista--activo,
+body.alto-contraste .card-item--activo .card-item__simular {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+.btn-simular-contraste {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: 1.5px solid var(--input-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-simular-contraste:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+body.alto-contraste .btn-simular-contraste {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+@media (max-width: 1024px) {
+  .btn-simular-contraste {
+    padding: 5px 11px;
+    font-size: 0.75rem;
+  }
+}/* ==========================================================
+   Accesibilidad Web (a11y) y Modo Alto Contraste
+   Guía Práctica Parte 1 - CSS Base
+   ========================================================== */
+
+:focus-visible {
+  outline: 3px solid #0d9488;
+  outline-offset: 2px;
+}
+
+body.alto-contraste {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body.alto-contraste .panel,
+body.alto-contraste .modal,
+body.alto-contraste .menu,
+body.alto-contraste .cart__summary {
+  background-color: #0b0f19;
+  color: #ffffff;
+  border-color: #facc15;
+}
+
+body.alto-contraste .card-item {
+  border: 2px solid #facc15;
+  background: #111827;
+  color: #ffffff;
+}
+
+body.alto-contraste .card-item__estado,
+body.alto-contraste .price-old,
+body.alto-contraste .row,
+body.alto-contraste .modal__total,
+body.alto-contraste .install-info {
+  color: #e5e7eb;
+}
+
+body.alto-contraste .chip,
+body.alto-contraste .size-btn,
+body.alto-contraste .btn-simular-vista,
+body.alto-contraste .card-item__simular {
+  background-color: #111827;
+  color: #ffffff;
+  border: 1.5px solid #facc15;
+}
+
+body.alto-contraste .chip.active,
+body.alto-contraste .size-btn.active,
+body.alto-contraste .btn-simular-vista--activo,
+body.alto-contraste .card-item--activo .card-item__simular {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+.btn-simular-contraste {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: 1.5px solid var(--input-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-simular-contraste:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+body.alto-contraste .btn-simular-contraste {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+@media (max-width: 1024px) {
+  .btn-simular-contraste {
+    padding: 5px 11px;
+    font-size: 0.75rem;
+  }
+}/* ==========================================================
+   Accesibilidad Web (a11y) y Modo Alto Contraste
+   Guía Práctica Parte 1 - CSS Base
+   ========================================================== */
+
+:focus-visible {
+  outline: 3px solid #0d9488;
+  outline-offset: 2px;
+}
+
+body.alto-contraste {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body.alto-contraste .panel,
+body.alto-contraste .modal,
+body.alto-contraste .menu,
+body.alto-contraste .cart__summary {
+  background-color: #0b0f19;
+  color: #ffffff;
+  border-color: #facc15;
+}
+
+body.alto-contraste .card-item {
+  border: 2px solid #facc15;
+  background: #111827;
+  color: #ffffff;
+}
+
+body.alto-contraste .card-item__estado,
+body.alto-contraste .price-old,
+body.alto-contraste .row,
+body.alto-contraste .modal__total,
+body.alto-contraste .install-info {
+  color: #e5e7eb;
+}
+
+body.alto-contraste .chip,
+body.alto-contraste .size-btn,
+body.alto-contraste .btn-simular-vista,
+body.alto-contraste .card-item__simular {
+  background-color: #111827;
+  color: #ffffff;
+  border: 1.5px solid #facc15;
+}
+
+body.alto-contraste .chip.active,
+body.alto-contraste .size-btn.active,
+body.alto-contraste .btn-simular-vista--activo,
+body.alto-contraste .card-item--activo .card-item__simular {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+.btn-simular-contraste {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: 1.5px solid var(--input-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-simular-contraste:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+body.alto-contraste .btn-simular-contraste {
+  background-color: #facc15;
+  color: #000000;
+  border-color: #facc15;
+}
+
+@media (max-width: 1024px) {
+  .btn-simular-contraste {
+    padding: 5px 11px;
+    font-size: 0.75rem;
+  }
+}
